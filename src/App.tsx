@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react';
 import {IoSend} from 'react-icons/io5';
 import Message from './components/Message/Message';
 import Attractor from '../public/attractor-logo.png';
-
+import './App.css';
 
 interface MessageData {
   _id: string;
@@ -23,35 +23,41 @@ const App = () => {
     author: '',
     description: '',
   });
-
+  const [loading, setLoading] = useState(false);
 
   const request = async (url: string, method = 'GET') => {
-    const response = await fetch(url, {method});
 
-    if (response.ok) {
-      return response.json();
+    try {
+      const response = await fetch(url, {method});
+      if (response.ok) {
+        setLoading(false);
+        return response.json();
+      }
+    } catch (error) {
+      alert('Error get request: ' + error);
+      setLoading(false);
     }
-
-    throw new Error('Network Error: ' + response.status);
   };
 
   useEffect(() => {
     const getMessages = async () => {
       try {
+        setLoading(true);
         let url = 'http://146.185.154.90:8000/messages';
 
         if (lastMessageDateTime !== null) {
+          setLoading(false);
           url += `?datetime=${lastMessageDateTime}`;
         }
-
         const messagesRequest = await request(url);
 
         if (messagesRequest.length > 0) {
           setLastMessageDateTime(messagesRequest[messagesRequest.length - 1].datetime);
           setMessages(prevMessages => [...prevMessages, ...messagesRequest]);
+
         }
       } catch (error) {
-        console.error('Error get request', error);
+        alert('Error fetching messages:' + error);
       }
     };
 
@@ -83,10 +89,10 @@ const App = () => {
     if (message.author.trim() !== '' && message.author.trim() !== '') {
       try {
         await fetch('http://146.185.154.90:8000/messages', {method: 'POST', body});
-        setMessage(prevState => ({
-          ...prevState, description: ''}));
+
+        setMessage(prevState => ({...prevState, author: '', description: ''}));
       } catch (error) {
-        console.error('Error post request', error);
+        alert('Error post request:' + error);
       }
     }
   };
@@ -98,17 +104,18 @@ const App = () => {
         <img width={130} src={Attractor} alt="Attractor logo" className={'animate-spin-slow'}/>
         <h1 className={'font-inter text-white text-5xl mt-5 ms-5 block font-light'}>ATTRACTOR <br/> Chat</h1>
       </div>
-      <div id="messagesBlock" className="overflow-scroll p-4"
-           style={{border: '3px solid rgb(4, 1, 43)', height: '500px'}}>
-        {messages.map(message => (
-          <Message
-            key={message._id}
-            message={message.message}
-            author={message.author}
-            datetime={message.datetime}
-          />
-        ))}
-      </div>
+      {loading ? <div className="loader"/> :
+        <div id="messagesBlock" className="overflow-scroll p-4"
+             style={{border: '3px solid rgb(4, 1, 43)', height: '500px'}}>
+          {messages.map(message => (
+            <Message
+              key={message._id}
+              message={message.message}
+              author={message.author}
+              datetime={message.datetime}
+            />
+          ))}
+        </div>}
       <form onSubmit={onFormSubmit}>
         <div className="flex flex-col gap-y-4 p-5 rounded-3xl rounded-tr-none rounded-tl-none"
              style={{backgroundColor: 'rgb(4, 1, 43)'}}>
@@ -118,8 +125,7 @@ const App = () => {
               name={'author'}
               id={'author'}
               value={message.author}
-              className="rounded-3xl rounded-tl-none rounded-bl-none p-2 w-3/4
-              focus:outline-none focus:shadow-lg focus:shadow-blue-700 "
+              className="rounded-3xl rounded-tl-none rounded-bl-none p-2 w-3/4 focus:outline-none focus:shadow-lg focus:shadow-blue-700 "
               placeholder="Введите ваше имя!"
               onChange={changeMessage}
               required
@@ -128,10 +134,8 @@ const App = () => {
               <IoSend size={20} color="white"/>
             </button>
           </div>
-
           <textarea
-            className="rounded-3xl rounded-tl-none rounded-bl-none
-            p-2 focus:outline-none focus:shadow-lg focus:shadow-blue-700"
+            className="rounded-3xl rounded-tl-none rounded-bl-none p-2 focus:outline-none focus:shadow-lg focus:shadow-blue-700"
             name="description"
             id="description"
             value={message.description}
