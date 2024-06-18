@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {IoSend} from 'react-icons/io5';
 import Message from './components/Message/Message';
-import Attractor from '../public/attractor-logo-stroke.1d6468d6.svg';
+import Attractor from '../public/attractor-logo.png';
 
 
 interface MessageData {
@@ -78,17 +78,17 @@ const App = () => {
     const body = new URLSearchParams();
 
     body.append('author', message.author);
-    body.append('description', message.description);
+    body.append('message', message.description);
 
     if (message.author.trim() !== '' && message.author.trim() !== '') {
       try {
         await fetch('http://146.185.154.90:8000/messages', {method: 'POST', body});
-        setMessage({author: '', description: ''});
+        setMessage(prevState => ({
+          ...prevState, description: ''}));
       } catch (error) {
         console.error('Error post request', error);
       }
     }
-
   };
 
   return (
